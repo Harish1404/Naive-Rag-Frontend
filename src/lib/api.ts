@@ -4,7 +4,7 @@ import { toast } from "sonner";
 // ── Configuration ────────────────────────────────────────────────────────────
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  process.env.BACKEND_URL ?? "http://localhost:8000";
 
 const PLACEHOLDER_USER_ID = "default_user";
 
