@@ -1,26 +1,233 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Electric Minimal — GenZ palette from styles.md
+ *
+ * Dark-first design. The :root block is the DARK theme (default).
+ * The .light class flips to the light palette via next-themes.
+ */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-surface-elevated: var(--surface-elevated);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ── Dark Theme (Default) ─────────────────────────────────────────────────── */
+
+:root {
+  --background: #0F0F14;
+  --foreground: #F5F5F7;
+  --card: #1A1B23;
+  --card-foreground: #F5F5F7;
+  --popover: #1A1B23;
+  --popover-foreground: #F5F5F7;
+  --primary: #7C5CFF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #00E5A0;
+  --secondary-foreground: #0F0F14;
+  --muted: #22232E;
+  --muted-foreground: #9494A6;
+  --accent: #22232E;
+  --accent-foreground: #F5F5F7;
+  --destructive: #FF4C6E;
+  --border: #2A2B36;
+  --input: #2A2B36;
+  --ring: #7C5CFF;
+  --surface-elevated: #22232E;
+
+  /* Charts — violet gradient */
+  --chart-1: #7C5CFF;
+  --chart-2: #9B7FFF;
+  --chart-3: #00E5A0;
+  --chart-4: #00B389;
+  --chart-5: #5A3FCC;
+
+  --radius: 0.75rem;
+
+  /* Sidebar — slightly lighter than bg */
+  --sidebar: #14141B;
+  --sidebar-foreground: #F5F5F7;
+  --sidebar-primary: #7C5CFF;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1A1B23;
+  --sidebar-accent-foreground: #F5F5F7;
+  --sidebar-border: #2A2B36;
+  --sidebar-ring: #7C5CFF;
+}
+
+/* ── Light Theme ──────────────────────────────────────────────────────────── */
+
+.light {
+  --background: #FAFAFC;
+  --foreground: #16161C;
+  --card: #FFFFFF;
+  --card-foreground: #16161C;
+  --popover: #FFFFFF;
+  --popover-foreground: #16161C;
+  --primary: #6D4FE0;
+  --primary-foreground: #FFFFFF;
+  --secondary: #00B389;
+  --secondary-foreground: #FFFFFF;
+  --muted: #F0EFF7;
+  --muted-foreground: #6B6B7A;
+  --accent: #F0EFF7;
+  --accent-foreground: #16161C;
+  --destructive: #E5364D;
+  --border: #E4E3EC;
+  --input: #E4E3EC;
+  --ring: #6D4FE0;
+  --surface-elevated: #F0EFF7;
+
+  /* Charts */
+  --chart-1: #6D4FE0;
+  --chart-2: #8B6FFF;
+  --chart-3: #00B389;
+  --chart-4: #009974;
+  --chart-5: #4A35B0;
+
+  /* Sidebar */
+  --sidebar: #F4F3FA;
+  --sidebar-foreground: #16161C;
+  --sidebar-primary: #6D4FE0;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EAE8F5;
+  --sidebar-accent-foreground: #16161C;
+  --sidebar-border: #E4E3EC;
+  --sidebar-ring: #6D4FE0;
+}
+
+/* ── Base Layer ───────────────────────────────────────────────────────────── */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Scrollbar Styling ────────────────────────────────────────────────────── */
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+}
+
+/* ── Chat Message Animations ──────────────────────────────────────────────── */
+
+@keyframes message-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-in {
+  animation: message-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.typing-dot {
+  animation: typing-dot 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ── Sidebar Transition ───────────────────────────────────────────────────── */
+
+.sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease,
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Glassmorphism Utility ────────────────────────────────────────────────── */
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.light .glass {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
