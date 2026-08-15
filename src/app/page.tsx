@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Sparkles, FileText, Globe, Code, UserCheck } from "lucide-react";
 import { useChatStore } from "@/stores/chat-store";
-import { useSidebarStore } from "@/stores/sidebar-store";
 import { ChatContainer } from "@/components/chat/chat-container";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatHeader } from "@/components/chat-header";
+import { useGuardedSend } from "@/hooks/use-guarded-send";
 
 const SUGGESTED_PROMPTS = [
   {
@@ -33,20 +31,11 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function HomePage() {
-  const router = useRouter();
-  const { messages, isStreaming, sendMessage, stopStreaming } = useChatStore();
-  const { fetchConversations } = useSidebarStore();
+  const { messages, isStreaming, stopStreaming } = useChatStore();
 
-  const handleSend = useCallback(
-    async (prompt: string) => {
-      const conversationId = await sendMessage(prompt);
-      if (conversationId) {
-        await fetchConversations();
-        router.push(`/c/${conversationId}`);
-      }
-    },
-    [sendMessage, fetchConversations, router]
-  );
+  // Signed out, this stashes the prompt and routes to sign-in, then replays it
+  // once the backend session exists. Signed in, it just sends.
+  const handleSend = useGuardedSend();
 
   const hasMessages = messages.length > 0;
 

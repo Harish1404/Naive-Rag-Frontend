@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { UserMenu } from "@/components/auth/user-menu";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useChatStore } from "@/stores/chat-store";
 import { cn } from "@/lib/utils";
@@ -318,9 +319,9 @@ export function AppSidebar() {
           )}
         </div>
 
-        {/* Footer / Info */}
-        <div className="p-3 border-t border-sidebar-border/40 text-[11px] text-muted-foreground/60 text-center shrink-0">
-          <span>GenZ AI Assistant · v1.0</span>
+        {/* Footer: account menu (profile, connectors, theme, log out) */}
+        <div className="p-2 border-t border-sidebar-border/40 shrink-0">
+          <UserMenu />
         </div>
       </aside>
 

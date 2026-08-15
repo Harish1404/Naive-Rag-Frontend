@@ -1,4 +1,4 @@
-import { API_BASE_URL, PLACEHOLDER_USER_ID } from "./api";
+import { API_BASE_URL, refreshSession } from "./api";
 
 /**
  * Streams a chat response from the backend using native fetch + ReadableStream.
@@ -9,6 +9,10 @@ import { API_BASE_URL, PLACEHOLDER_USER_ID } from "./api";
  *
  * Returns the `conversation_id` from the `X-Conversation-Id` response header,
  * which is essential for the first message of a new chat (where no id exists yet).
+ *
+ * Identity comes from the session cookie, not the request body — `credentials:
+ * "include"` is what makes the browser attach it on a cross-origin call. The
+ * body no longer carries a `user_id`; the backend rejects the field outright.
  */
 
 const MAX_STREAM_RETRIES = 3;
@@ -20,6 +24,7 @@ interface StreamChatOptions {
   onToken: (token: string) => void;
   onComplete: () => void;
   onError: (error: Error) => void;
+  onUnauthorized?: () => void;
   signal?: AbortSignal;
 }
 
@@ -29,9 +34,11 @@ export async function streamChat({
   onToken,
   onComplete,
   onError,
+  onUnauthorized,
   signal,
 }: StreamChatOptions): Promise<string | null> {
   let lastError: Error | null = null;
+  let refreshAttempted = false;
 
   for (let attempt = 0; attempt <= MAX_STREAM_RETRIES; attempt++) {
     if (attempt > 0) {
@@ -45,7 +52,6 @@ export async function streamChat({
     try {
       const body: Record<string, string> = {
         user_prompt: userPrompt,
-        user_id: PLACEHOLDER_USER_ID,
       };
 
       if (conversationId) {
@@ -56,8 +62,23 @@ export async function streamChat({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        // Sends the HttpOnly session cookie cross-origin.
+        credentials: "include",
         signal,
       });
+
+      // The access token lapsed mid-session. Refresh once and replay — this
+      // must not count against the network-retry budget, and must not loop.
+      if (response.status === 401 && !refreshAttempted) {
+        refreshAttempted = true;
+        const refreshed = await refreshSession();
+        if (refreshed) {
+          attempt -= 1; // replay immediately, without the backoff delay
+          continue;
+        }
+        onUnauthorized?.();
+        throw new Error("Your session has expired. Please sign in again.");
+      }
 
       if (!response.ok) {
         const errorBody = await response.text().catch(() => "");
