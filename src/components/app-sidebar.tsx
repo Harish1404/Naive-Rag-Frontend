@@ -147,7 +147,7 @@ export function AppSidebar() {
               <Sparkles className="h-4 w-4 text-primary" />
             </div>
             <span className="font-heading font-semibold text-sm tracking-tight text-foreground">
-              RAG Chat
+              GenAI Amigos
             </span>
           </div>
           <Button

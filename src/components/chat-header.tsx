@@ -53,7 +53,7 @@ export function ChatHeader({ title }: ChatHeaderProps) {
             <div className="flex items-center gap-2">
               <span className="font-heading font-semibold text-sm tracking-tight text-foreground flex items-center gap-1.5">
                 <Sparkles className="h-4 w-4 text-primary" />
-                RAG Chat
+                GenAI-Amigos
               </span>
             </div>
           )}
