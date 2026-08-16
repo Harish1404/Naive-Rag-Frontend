@@ -39,9 +39,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (!isSignedIn) {
     return (
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative min-w-0">
-        {children}
-      </main>
+      <>
+        <AppSidebar isAuthenticated={false} />
+        <main className="flex-1 flex flex-col h-screen overflow-hidden relative min-w-0">
+          {children}
+        </main>
+      </>
     );
   }
 

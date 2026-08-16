@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import type { Message } from "@/types/chat";
 import { cn } from "@/lib/utils";
-import { User, Copy, Check } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import { useState, useCallback } from "react";
 
 interface ChatMessageProps {
@@ -22,52 +22,46 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
   }, [message.content]);
 
   return (
-    <div
-      className={cn(
-        "flex gap-3 animate-message-in group",
-        isUser ? "justify-end" : "justify-start"
-      )}
-    >
-      {/* AI Avatar */}
-      {!isUser && (
-        <div className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mt-1 ring-1 ring-primary/20">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            className="text-primary"
-          >
-            <path
-              d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-              fill="currentColor"
-            />
-          </svg>
-        </div>
-      )}
+    <div className="animate-message-in group">
+      {/* Role label */}
+      <div className="mb-1.5">
+        <span
+          className={cn(
+            "text-xs font-semibold tracking-wide",
+            isUser ? "text-foreground" : "text-primary"
+          )}
+        >
+          {isUser ? "You" : "Assistant"}
+        </span>
+      </div>
 
-      <div className={cn("max-w-[75%] relative", isUser && "max-w-[65%]")}>
+      {/* Message content */}
+      <div className="relative">
         <div
           className={cn(
-            "rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed",
+            "text-[14.5px] leading-[1.7]",
             isUser
-              ? "bg-primary text-primary-foreground rounded-tr-md"
-              : "bg-surface-elevated text-foreground rounded-tl-md",
-            isStreaming && "animate-pulse-subtle"
+              ? "bg-surface-elevated/50 rounded-2xl px-4 py-3 text-foreground"
+              : "text-foreground/90"
           )}
         >
           {isUser ? (
             <p className="whitespace-pre-wrap">{message.content}</p>
           ) : (
-            <div className="prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            <div
+              className={cn(
+                "prose prose-sm dark:prose-invert max-w-none",
+                "[&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+                isStreaming && "streaming-cursor"
+              )}
+            >
               <ReactMarkdown
                 components={{
-                  // Style code blocks
                   code: ({ className, children, ...props }) => {
                     const isInline = !className;
                     return isInline ? (
                       <code
-                        className="bg-background/30 px-1.5 py-0.5 rounded text-[13px] font-mono"
+                        className="bg-muted/60 px-1.5 py-0.5 rounded text-[13px] font-mono text-foreground"
                         {...props}
                       >
                         {children}
@@ -75,7 +69,7 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
                     ) : (
                       <code
                         className={cn(
-                          "block bg-background/40 p-3 rounded-lg text-[13px] font-mono overflow-x-auto my-2",
+                          "block bg-muted/40 p-3 rounded-lg text-[13px] font-mono overflow-x-auto my-3",
                           className
                         )}
                         {...props}
@@ -84,7 +78,6 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
                       </code>
                     );
                   },
-                  // Make links open in new tab
                   a: ({ children, ...props }) => (
                     <a
                       {...props}
@@ -95,7 +88,6 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
                       {children}
                     </a>
                   ),
-                  // Style lists
                   ul: ({ children }) => (
                     <ul className="list-disc list-inside space-y-1 my-2">
                       {children}
@@ -106,7 +98,7 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
                       {children}
                     </ol>
                   ),
-                  p: ({ children }) => <p className="my-1.5">{children}</p>,
+                  p: ({ children }) => <p className="my-2">{children}</p>,
                 }}
               >
                 {message.content}
@@ -115,7 +107,7 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
           )}
         </div>
 
-        {/* Copy button for AI messages */}
+        {/* Copy button for assistant messages */}
         {!isUser && message.content && (
           <button
             onClick={handleCopy}
@@ -135,13 +127,6 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
           </button>
         )}
       </div>
-
-      {/* User Avatar */}
-      {isUser && (
-        <div className="h-8 w-8 rounded-full bg-primary/30 flex items-center justify-center shrink-0 mt-1">
-          <User className="h-4 w-4 text-primary-foreground" />
-        </div>
-      )}
     </div>
   );
 }

@@ -118,7 +118,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       const incomingId = data.user.user_id;
       if (loadedUserId.current !== null && loadedUserId.current !== incomingId) {
         useChatStore.getState().clearChat();
-        useSidebarStore.setState({ conversations: [], isLoading: false });
         clearPendingPrompt();
       }
       loadedUserId.current = incomingId;

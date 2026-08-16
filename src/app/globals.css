@@ -210,6 +210,21 @@
   animation-delay: 0.4s;
 }
 
+/* ── Streaming Cursor ────────────────────────────────────────────────────── */
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.streaming-cursor::after {
+  content: "▍";
+  animation: blink-cursor 1s step-end infinite;
+  color: var(--primary);
+  font-weight: 400;
+  margin-left: 1px;
+}
+
 /* ── Sidebar Transition ───────────────────────────────────────────────────── */
 
 .sidebar-transition {

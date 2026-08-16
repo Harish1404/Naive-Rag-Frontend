@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 
 import { useChatStore } from "@/stores/chat-store";
-import { useSidebarStore } from "@/stores/sidebar-store";
 import { useSession } from "@/components/auth/session-provider";
 import { savePendingPrompt, takePendingPrompt } from "@/lib/pending-prompt";
+import {
+  useOptimisticInsert,
+  useInvalidateConversations,
+} from "@/hooks/use-conversations";
 
 /**
  * Sending a message, with the sign-in detour handled.
@@ -27,7 +30,8 @@ export function useGuardedSend() {
   const { status } = useSession();
 
   const { sendMessage } = useChatStore();
-  const { fetchConversations } = useSidebarStore();
+  const optimisticInsert = useOptimisticInsert();
+  const invalidateConversations = useInvalidateConversations();
 
   // takePendingPrompt() clears as it reads, but the send is async — without
   // this flag a second render could start a duplicate turn before the first
@@ -44,12 +48,14 @@ export function useGuardedSend() {
 
       const conversationId = await sendMessage(prompt);
       if (conversationId) {
-        await fetchConversations();
+        // Optimistically insert the new conversation into the sidebar cache
+        // so it appears instantly, then revalidate in background
+        optimisticInsert(conversationId, prompt.slice(0, 60));
         router.push(`/c/${conversationId}`);
       }
       return conversationId;
     },
-    [isLoaded, isSignedIn, sendMessage, fetchConversations, router]
+    [isLoaded, isSignedIn, sendMessage, optimisticInsert, router]
   );
 
   useEffect(() => {

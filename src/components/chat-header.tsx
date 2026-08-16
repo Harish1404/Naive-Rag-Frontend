@@ -1,10 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { useSidebarStore } from "@/stores/sidebar-store";
-import { useChatStore } from "@/stores/chat-store";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { PanelLeftOpen, Share2, Sparkles, Cpu, Check } from "lucide-react";
+import { PanelLeftOpen, Share2, Sparkles, Cpu, Check, LogIn } from "lucide-react";
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
@@ -13,8 +14,9 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ title }: ChatHeaderProps) {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
   const { isOpen, toggleSidebar } = useSidebarStore();
-  const { messages } = useChatStore();
   const [copied, setCopied] = useState(false);
 
   const handleShare = useCallback(() => {
@@ -66,22 +68,36 @@ export function ChatHeader({ title }: ChatHeaderProps) {
         </div>
       </div>
 
-      {/* Right: Actions (Share, Theme Toggle) */}
+      {/* Right: Actions */}
       <div className="flex items-center gap-1.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleShare}
-          className="h-8 px-2.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 gap-1.5"
-          title="Share conversation"
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5 text-secondary" />
-          ) : (
-            <Share2 className="h-3.5 w-3.5" />
-          )}
-          <span className="hidden sm:inline">Share</span>
-        </Button>
+        {isLoaded && !isSignedIn ? (
+          /* Sign-in button for unauthenticated users */
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/sign-in")}
+            className="h-8 px-3 rounded-lg text-xs font-medium border-primary/40 text-primary hover:bg-primary/10 gap-1.5 transition-all duration-200"
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            <span>Sign in</span>
+          </Button>
+        ) : (
+          /* Share button for authenticated users */
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="h-8 px-2.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 gap-1.5"
+            title="Share conversation"
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-secondary" />
+            ) : (
+              <Share2 className="h-3.5 w-3.5" />
+            )}
+            <span className="hidden sm:inline">Share</span>
+          </Button>
+        )}
 
         <div className="h-4 w-[1px] bg-border/60 mx-1 hidden sm:block" />
 

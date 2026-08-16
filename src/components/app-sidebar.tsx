@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Plus,
@@ -11,6 +11,7 @@ import {
   Plug,
   Sparkles,
   ChevronDown,
+  LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,25 +31,30 @@ import {
 import { UserMenu } from "@/components/auth/user-menu";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useChatStore } from "@/stores/chat-store";
+import {
+  useConversations,
+  useDeleteConversation,
+  useRenameConversation,
+} from "@/hooks/use-conversations";
 import { cn } from "@/lib/utils";
 
 const INITIAL_VISIBLE_COUNT = 10;
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  isAuthenticated?: boolean;
+}
+
+export function AppSidebar({ isAuthenticated = true }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const {
-    conversations,
-    isLoading,
-    isOpen,
-    toggleSidebar,
-    fetchConversations,
-    deleteConversation,
-    renameConversation,
-  } = useSidebarStore();
-
+  const { isOpen, toggleSidebar } = useSidebarStore();
   const { activeConversationId, clearChat } = useChatStore();
+
+  // TanStack Query — only fetch when authenticated
+  const { data: conversations = [], isLoading } = useConversations(isAuthenticated);
+  const deleteConversation = useDeleteConversation();
+  const renameConversation = useRenameConversation();
 
   // Pagination state for sidebar chats (show 10 initially, expand by 10)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
@@ -57,15 +63,6 @@ export function AppSidebar() {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
-
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
-
-  // Refetch when navigating to a new page
-  useEffect(() => {
-    fetchConversations();
-  }, [pathname, fetchConversations]);
 
   const handleNewChat = useCallback(() => {
     clearChat();
@@ -83,7 +80,7 @@ export function AppSidebar() {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      await deleteConversation(id);
+      deleteConversation.mutate(id);
       if (activeConversationId === id) {
         clearChat();
         router.push("/");
@@ -94,7 +91,7 @@ export function AppSidebar() {
 
   const handleRenameSubmit = useCallback(async () => {
     if (renameId && renameValue.trim()) {
-      await renameConversation(renameId, renameValue.trim());
+      renameConversation.mutate({ id: renameId, title: renameValue.trim() });
       setRenameDialogOpen(false);
       setRenameId(null);
       setRenameValue("");
@@ -193,14 +190,23 @@ export function AppSidebar() {
             <span className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-wider">
               Recent Chats
             </span>
-            {conversations.length > 0 && (
+            {isAuthenticated && conversations.length > 0 && (
               <span className="text-[10px] font-mono text-muted-foreground/50">
                 {conversations.length}
               </span>
             )}
           </div>
 
-          {isLoading ? (
+          {!isAuthenticated ? (
+            /* Signed-out empty state */
+            <div className="flex flex-col items-center justify-center h-36 text-muted-foreground text-xs text-center px-4">
+              <MessageSquare className="h-7 w-7 mb-2 opacity-30 text-primary" />
+              <p className="font-medium text-muted-foreground/80">Sign in to see your chats</p>
+              <p className="text-[11px] text-muted-foreground/50 mt-0.5">
+                Your conversation history will appear here
+              </p>
+            </div>
+          ) : isLoading ? (
             // Skeleton loaders
             <div className="space-y-1 px-1">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -311,7 +317,7 @@ export function AppSidebar() {
                     className="w-full h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 justify-center gap-1.5 rounded-xl border border-dashed border-sidebar-border/60"
                   >
                     <ChevronDown className="h-3.5 w-3.5" />
-                    <span>Show more ({conversations.length - visibleCount})</span>
+                    <span>Show more ({validConversations.length - visibleCount})</span>
                   </Button>
                 </div>
               )}
@@ -319,9 +325,20 @@ export function AppSidebar() {
           )}
         </div>
 
-        {/* Footer: account menu (profile, connectors, theme, log out) */}
+        {/* Footer: login button for unauthenticated, user menu for authenticated */}
         <div className="p-2 border-t border-sidebar-border/40 shrink-0">
-          <UserMenu />
+          {isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => router.push("/sign-in")}
+              className="w-full justify-center gap-2 h-9 rounded-xl text-sm font-medium border-primary/40 text-primary hover:bg-primary/10 transition-all duration-200"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Sign in</span>
+            </Button>
+          )}
         </div>
       </aside>
 

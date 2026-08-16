@@ -1,24 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  Calendar,
-  Cloud,
-  Database,
-  FileText,
-  GitBranch,
   Globe,
-  Hash,
   Loader2,
-  Mail,
-  Search,
   TriangleAlert,
-  type LucideIcon,
 } from "lucide-react";
+import {
+  SiGithub,
+  SiGmail,
+  SiNotion,
+  SiGoogledrive,
+  SiPostgresql,
+  SiGooglecalendar,
+  SiConfluence,
+} from "@icons-pack/react-simple-icons";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+function SlackIcon({ size = 20, color = "#E01E5A" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"
+        fill={color}
+      />
+    </svg>
+  );
+}
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,38 +53,44 @@ import {
  * Deliberately separate from status, which is whatever the backend says. The
  * two are joined at render time and keyed by `provider`, so these strings must
  * match the CATALOGUE in app/routes/connectors.py.
+ *
+ * Icons use @icons-pack/react-simple-icons for actual brand marks.
  */
-const PRESENTATION: Record<
-  string,
-  { icon: LucideIcon; color: string; description: string }
-> = {
+
+interface ProviderPresentation {
+  icon: ComponentType<{ size?: number; color?: string; className?: string }>;
+  color: string;
+  description: string;
+}
+
+const PRESENTATION: Record<string, ProviderPresentation> = {
   github: {
-    icon: GitBranch,
+    icon: SiGithub,
     color: "#8B5CF6",
     description: "Access repositories, issues, and pull requests",
   },
   gmail: {
-    icon: Mail,
+    icon: SiGmail,
     color: "#EA4335",
     description: "Connect your email for context-aware responses",
   },
   slack: {
-    icon: Hash,
+    icon: SlackIcon,
     color: "#E01E5A",
     description: "Search through your Slack workspace messages",
   },
   notion: {
-    icon: FileText,
+    icon: SiNotion,
     color: "#000000",
     description: "Query your Notion pages and databases",
   },
   google_drive: {
-    icon: Cloud,
+    icon: SiGoogledrive,
     color: "#4285F4",
     description: "Access documents, sheets, and presentations",
   },
   postgres: {
-    icon: Database,
+    icon: SiPostgresql,
     color: "#336791",
     description: "Query your databases with natural language",
   },
@@ -83,18 +100,18 @@ const PRESENTATION: Record<
     description: "Search the web for real-time information",
   },
   google_calendar: {
-    icon: Calendar,
+    icon: SiGooglecalendar,
     color: "#F4B400",
     description: "Check your schedule and manage events",
   },
   confluence: {
-    icon: Search,
+    icon: SiConfluence,
     color: "#0052CC",
     description: "Search your team's knowledge base",
   },
 };
 
-const FALLBACK = {
+const FALLBACK: ProviderPresentation = {
   icon: Globe,
   color: "#8B5CF6",
   description: "Connect this service via MCP",
@@ -187,9 +204,9 @@ export default function ConnectorsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-y-auto">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50">
+    <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-background">
+      {/* Header — solid background, no glass effect */}
+      <div className="sticky top-0 z-20 w-full bg-background border-b border-border/50">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
           <Button
             variant="ghost"
@@ -253,8 +270,8 @@ export default function ConnectorsPage() {
                         style={{ backgroundColor: `${look.color}15` }}
                       >
                         <Icon
-                          className="h-5 w-5"
-                          style={{ color: look.color }}
+                          size={20}
+                          color={look.color}
                         />
                       </div>
 

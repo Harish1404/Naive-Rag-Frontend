@@ -3,7 +3,10 @@
 import { useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useChatStore } from "@/stores/chat-store";
-import { useSidebarStore } from "@/stores/sidebar-store";
+import {
+  useConversations,
+  useInvalidateConversations,
+} from "@/hooks/use-conversations";
 import { ChatContainer } from "@/components/chat/chat-container";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatHeader } from "@/components/chat-header";
@@ -21,7 +24,8 @@ export default function ConversationPage() {
     setActiveConversationId,
   } = useChatStore();
 
-  const { conversations, fetchConversations } = useSidebarStore();
+  const { data: conversations = [] } = useConversations();
+  const invalidateConversations = useInvalidateConversations();
 
   const activeTitle = useMemo(() => {
     const found = conversations.find((c) => c.conversation_id === conversationId);
@@ -40,14 +44,14 @@ export default function ConversationPage() {
   const handleSend = useCallback(
     async (prompt: string) => {
       await sendMessage(prompt);
-      await fetchConversations();
+      invalidateConversations();
     },
-    [sendMessage, fetchConversations]
+    [sendMessage, invalidateConversations]
   );
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-background">
-      {/* Top Glassmorphic Header Navbar */}
+      {/* Top Navbar */}
       <ChatHeader title={activeTitle} />
 
       {/* Main Chat Area */}
