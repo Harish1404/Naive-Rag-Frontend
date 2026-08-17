@@ -29,7 +29,7 @@ export function ChatContainer() {
   if (isLoadingHistory) {
     return (
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[52rem] mx-auto">
+        <div className="max-w-[56rem] mx-auto">
           <MessageSkeleton count={4} />
         </div>
       </div>
@@ -38,7 +38,7 @@ export function ChatContainer() {
 
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto">
-      <div className="max-w-[52rem] mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-[56rem] mx-auto px-6 py-8 space-y-8">
         {messages.map((msg: Message) => (
           <ChatMessage key={msg.message_id} message={msg} />
         ))}

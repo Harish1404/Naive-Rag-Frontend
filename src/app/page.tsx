@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Sparkles, FileText, Globe, Code, UserCheck } from "lucide-react";
 import { useChatStore } from "@/stores/chat-store";
 import { ChatContainer } from "@/components/chat/chat-container";
@@ -31,7 +32,14 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function HomePage() {
-  const { messages, isStreaming, stopStreaming } = useChatStore();
+  const { messages, isStreaming, stopStreaming, activeConversationId, clearChat } =
+    useChatStore();
+
+  useEffect(() => {
+    if (activeConversationId) {
+      clearChat();
+    }
+  }, [activeConversationId, clearChat]);
 
   // Signed out, this stashes the prompt and routes to sign-in, then replays it
   // once the backend session exists. Signed in, it just sends.

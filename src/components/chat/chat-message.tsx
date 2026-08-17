@@ -22,13 +22,18 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
   }, [message.content]);
 
   return (
-    <div className="animate-message-in group">
+    <div
+      className={cn(
+        "animate-message-in flex flex-col w-full",
+        isUser ? "items-end" : "items-start"
+      )}
+    >
       {/* Role label */}
-      <div className="mb-1.5">
+      <div className={cn("mb-1.5 flex items-center gap-1.5", isUser ? "justify-end" : "justify-start")}>
         <span
           className={cn(
             "text-xs font-semibold tracking-wide",
-            isUser ? "text-foreground" : "text-primary"
+            isUser ? "text-muted-foreground" : "text-primary"
           )}
         >
           {isUser ? "You" : "Assistant"}
@@ -36,21 +41,21 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
       </div>
 
       {/* Message content */}
-      <div className="relative">
+      <div className={cn("relative", isUser ? "max-w-[80%] sm:max-w-[70%]" : "w-full")}>
         <div
           className={cn(
             "text-[14.5px] leading-[1.7]",
             isUser
-              ? "bg-surface-elevated/50 rounded-2xl px-4 py-3 text-foreground"
-              : "text-foreground/90"
+              ? "bg-surface-elevated text-foreground border border-border/70 rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm whitespace-pre-wrap break-words"
+              : "text-foreground/90 w-full"
           )}
         >
           {isUser ? (
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
           ) : (
             <div
               className={cn(
-                "prose prose-sm dark:prose-invert max-w-none",
+                "prose prose-sm dark:prose-invert max-w-none w-full",
                 "[&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                 isStreaming && "streaming-cursor"
               )}
@@ -69,7 +74,7 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
                     ) : (
                       <code
                         className={cn(
-                          "block bg-muted/40 p-3 rounded-lg text-[13px] font-mono overflow-x-auto my-3",
+                          "block bg-muted/40 p-3 rounded-lg text-[13px] font-mono overflow-x-auto my-3 border border-border/40",
                           className
                         )}
                         {...props}
@@ -89,16 +94,21 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
                     </a>
                   ),
                   ul: ({ children }) => (
-                    <ul className="list-disc list-inside space-y-1 my-2">
+                    <ul className="list-disc list-outside pl-6 space-y-1.5 my-3 [&>li>p]:inline [&>li>p]:my-0">
                       {children}
                     </ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="list-decimal list-inside space-y-1 my-2">
+                    <ol className="list-decimal list-outside pl-6 space-y-1.5 my-3 [&>li>p]:inline [&>li>p]:my-0">
                       {children}
                     </ol>
                   ),
-                  p: ({ children }) => <p className="my-2">{children}</p>,
+                  li: ({ children }) => (
+                    <li className="leading-relaxed pl-1">
+                      {children}
+                    </li>
+                  ),
+                  p: ({ children }) => <p className="my-2.5 leading-relaxed">{children}</p>,
                 }}
               >
                 {message.content}
@@ -111,17 +121,18 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
         {!isUser && message.content && (
           <button
             onClick={handleCopy}
-            className="absolute -bottom-6 left-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+            className="mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-muted/50"
+            title="Copy response"
           >
             {copied ? (
               <>
-                <Check className="h-3 w-3" />
-                Copied
+                <Check className="h-3 w-3 text-secondary" />
+                <span>Copied</span>
               </>
             ) : (
               <>
                 <Copy className="h-3 w-3" />
-                Copy
+                <span>Copy</span>
               </>
             )}
           </button>

@@ -46,7 +46,7 @@ export function ChatHeader({ title }: ChatHeaderProps) {
           </Button>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {title ? (
             <h2 className="font-medium text-sm text-foreground truncate max-w-[220px] sm:max-w-[350px]">
               {title}
@@ -60,10 +60,10 @@ export function ChatHeader({ title }: ChatHeaderProps) {
             </div>
           )}
 
-          {/* Model Badge */}
-          <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-medium">
+          {/* Model Badge — Mistral Small / Gemini Router */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-medium tracking-tight">
             <Cpu className="h-3 w-3" />
-            <span>Llama 3.1 8B</span>
+            <span>Mistral Small · Gemini</span>
           </div>
         </div>
       </div>

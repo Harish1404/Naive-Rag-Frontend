@@ -116,9 +116,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-y-auto">
+    <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-background">
       {/* Header — matches the /connectors page chrome */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="sticky top-0 z-20 w-full bg-background border-b border-border/50">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
           <Button
             variant="ghost"
