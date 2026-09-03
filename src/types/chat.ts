@@ -49,6 +49,38 @@ export interface ConversationDetail extends Conversation {
   messages: Message[];
 }
 
+// ── Human-in-the-loop tool approval ─────────────────────────────────────────
+
+/** One tool call the graph paused on, as sent in the `interrupt` SSE event. */
+export interface PendingToolCall {
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+}
+
+/**
+ * The payload of an `interrupt` event, raised by `approve_tools` in the tool
+ * agent. The graph is checkpointed mid-run and waits for POST
+ * /chatbot/{id}/resume before it will go any further.
+ */
+export interface ToolApprovalRequest {
+  type: "tool_approval";
+  tool_calls: PendingToolCall[];
+}
+
+/**
+ * The answer to an approval prompt. Matches `ToolDecision` in
+ * app/schemas/chat.py.
+ *
+ * There is deliberately no tool_call_id: the graph already knows which call it
+ * paused on, and accepting an id from the client would only create a way to
+ * answer a different prompt than the one shown.
+ */
+export interface ToolDecision {
+  action: "accept" | "reject";
+  reason?: string;
+}
+
 // ── Health ───────────────────────────────────────────────────────────────────
 
 export interface HealthResponse {

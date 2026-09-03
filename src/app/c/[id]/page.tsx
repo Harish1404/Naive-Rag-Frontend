@@ -18,6 +18,7 @@ export default function ConversationPage() {
   const {
     activeConversationId,
     isStreaming,
+    pendingApproval,
     sendMessage,
     stopStreaming,
     loadConversation,
@@ -32,14 +33,32 @@ export default function ConversationPage() {
     return found?.title;
   }, [conversations, conversationId]);
 
-  // Load conversation when navigating to it
+  // Load conversation when navigating to it.
+  //
+  // The `isStreaming || pendingApproval` guard is what makes a brand-new chat
+  // work. Sending from `/` now navigates here the moment the conversation id
+  // arrives on the response header, while the answer is still streaming into
+  // the store. Without this guard that arrival looks like a cold load, and
+  // loadConversation would set `messages: []` and refetch a transcript the
+  // server has not finished writing — wiping the turn mid-flight.
   useEffect(() => {
-    if (conversationId && conversationId !== activeConversationId) {
+    if (!conversationId) return;
+
+    if (isStreaming || pendingApproval) return;
+
+    if (conversationId !== activeConversationId) {
       loadConversation(conversationId);
-    } else if (conversationId && conversationId === activeConversationId) {
+    } else {
       setActiveConversationId(conversationId);
     }
-  }, [conversationId, activeConversationId, loadConversation, setActiveConversationId]);
+  }, [
+    conversationId,
+    activeConversationId,
+    isStreaming,
+    pendingApproval,
+    loadConversation,
+    setActiveConversationId,
+  ]);
 
   const handleSend = useCallback(
     async (prompt: string) => {

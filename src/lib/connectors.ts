@@ -1,10 +1,14 @@
-import { api } from "@/lib/api";
-
 /**
- * Connectors — linking a third-party account so its MCP tools reach the chat.
+ * Connectors — the MCP integrations the assistant will eventually reach.
  *
- * Everything here goes through the shared `api` instance, so cookie auth, the
- * single-flight refresh and the retry/backoff behaviour all apply unchanged.
+ * This catalogue is static and lives entirely on the client. There is no
+ * `/connectors` endpoint on the backend, and the page used to call one: the
+ * request 404'd, the axios interceptor raised a "Not found" toast, and the grid
+ * sat on loading skeletons forever.
+ *
+ * Every provider is `coming_soon` until the MCP work lands. When it does, this
+ * constant is what a real `GET /connectors` response should replace — the shape
+ * is unchanged, so only the data source moves.
  */
 
 export type ConnectorStatus =
@@ -25,28 +29,31 @@ export interface Connector {
   last_error?: string | null;
 }
 
-/** Every provider the page can show, with this user's status on each. */
-export async function listConnectors(): Promise<Connector[]> {
-  const { data } = await api.get<Connector[]>("/connectors");
-  return data;
-}
-
 /**
- * Begin GitHub consent.
+ * The nine providers the page renders.
  *
- * The backend hands back a URL and we navigate to it, rather than the backend
- * answering with a 302. This call is an XHR: axios would follow a redirect to
- * github.com itself and the request would die on CORS before the user ever saw
- * a consent screen. Only a real browser navigation works.
+ * `provider` is the join key with the PRESENTATION map in
+ * src/app/connectors/page.tsx, which supplies each one's icon and blurb — so
+ * these strings must not be renamed on their own.
  */
-export async function connectGitHub(): Promise<void> {
-  const { data } = await api.get<{ authorize_url: string }>(
-    "/connectors/github/authorize"
-  );
-  window.location.href = data.authorize_url;
-}
-
-/** Revoke the token at GitHub and forget the connection. */
-export async function disconnectGitHub(): Promise<void> {
-  await api.delete("/connectors/github");
-}
+export const CONNECTORS: Connector[] = [
+  { provider: "github", label: "GitHub", status: "coming_soon", scopes: [] },
+  { provider: "gmail", label: "Gmail", status: "coming_soon", scopes: [] },
+  { provider: "slack", label: "Slack", status: "coming_soon", scopes: [] },
+  { provider: "notion", label: "Notion", status: "coming_soon", scopes: [] },
+  {
+    provider: "google_drive",
+    label: "Google Drive",
+    status: "coming_soon",
+    scopes: [],
+  },
+  { provider: "postgres", label: "PostgreSQL", status: "coming_soon", scopes: [] },
+  { provider: "web_search", label: "Web Search", status: "coming_soon", scopes: [] },
+  {
+    provider: "google_calendar",
+    label: "Google Calendar",
+    status: "coming_soon",
+    scopes: [],
+  },
+  { provider: "confluence", label: "Confluence", status: "coming_soon", scopes: [] },
+];

@@ -10,6 +10,7 @@ import { useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useVoiceStore } from "@/stores/voice-store";
+import { useChatStore } from "@/stores/chat-store";
 
 const chatSchema = z.object({
   prompt: z.string().min(1, "Type a message").max(8000),
@@ -33,6 +34,12 @@ export function ChatInput({
   placeholder = "Ask anything...",
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // The graph is parked on an approval prompt: it will not accept another turn
+  // until this one is answered, and typing a new prompt would orphan the
+  // pending interrupt. Lock the composer rather than let that happen.
+  const awaitingApproval = useChatStore((s) => s.pendingApproval !== null);
+  const locked = disabled || awaitingApproval;
 
   const {
     register,
@@ -59,14 +66,14 @@ export function ChatInput({
 
   const onSubmit = useCallback(
     (data: ChatFormValues) => {
-      if (isStreaming || disabled) return;
+      if (isStreaming || locked) return;
       onSend(data.prompt.trim());
       reset();
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
     },
-    [isStreaming, disabled, onSend, reset]
+    [isStreaming, locked, onSend, reset]
   );
 
   const handleKeyDown = useCallback(
@@ -148,8 +155,12 @@ export function ChatInput({
               formRef(e);
               textareaRef.current = e;
             }}
-            placeholder={placeholder}
-            disabled={disabled && !isStreaming}
+            placeholder={
+              awaitingApproval
+                ? "Approve or reject the tool call above to continue…"
+                : placeholder
+            }
+            disabled={locked && !isStreaming}
             onKeyDown={handleKeyDown}
             rows={1}
             className={cn(
@@ -212,10 +223,10 @@ export function ChatInput({
               <Button
                 type="submit"
                 size="icon"
-                disabled={!isValid || disabled}
+                disabled={!isValid || locked}
                 className={cn(
                   "h-8 w-8 rounded-xl transition-all duration-200",
-                  isValid && !disabled
+                  isValid && !locked
                     ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
                     : "bg-muted text-muted-foreground/40"
                 )}
@@ -228,7 +239,9 @@ export function ChatInput({
         </div>
 
         <p className="text-center text-[10px] text-muted-foreground/40 mt-2 font-mono">
-          {isRecording
+          {awaitingApproval
+            ? "Waiting on your decision above"
+            : isRecording
             ? "Listening… release to send · Esc to cancel"
             : voicePhase === "thinking"
               ? "Thinking…"

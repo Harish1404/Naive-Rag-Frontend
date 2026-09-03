@@ -2,6 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Tailwind v4 registers plugins from CSS — there is no tailwind.config.js here.
+   Without this line every `prose` class in chat-message.tsx is a no-op. */
+@plugin "@tailwindcss/typography";
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -155,6 +159,71 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ── Prose (assistant markdown) ───────────────────────────────────────────── */
+
+/*
+ * Point @tailwindcss/typography at the app's own palette.
+ *
+ * The plugin ships its own greys, which fight the Electric Minimal tokens and
+ * look washed out on #0F0F14. Rebinding its variables once here means the
+ * markdown inherits the same colours as the rest of the UI — and because the
+ * tokens themselves flip under `.light`, `dark:prose-invert` is not needed and
+ * is deliberately not used.
+ *
+ * ┌───────────────────────────────────────────────────────────────────────┐
+ * │ DO NOT WRAP THIS IN `@layer base` (or any layer).                     │
+ * │                                                                        │
+ * │ It was, and every declaration below was silently dead. The plugin      │
+ * │ emits its own `.prose { --tw-prose-*: … }` into `@layer utilities`,    │
+ * │ and `utilities` beats `base` — so the real values were the plugin's    │
+ * │ greys: body #364153 and headings #101828, on a #0F0F14 background.     │
+ * │ That is 1.8:1 and 1.1:1 against a 4.5:1 requirement — headings were    │
+ * │ effectively invisible in dark mode. Light mode looked fine, which is   │
+ * │ why it went unnoticed.                                                 │
+ * │                                                                        │
+ * │ Unlayered author styles outrank *every* cascade layer, so leaving this │
+ * │ outside `@layer` is what makes it win — deterministically, rather than │
+ * │ by hoping to be emitted after the plugin inside the same layer.        │
+ * └───────────────────────────────────────────────────────────────────────┘
+ */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--primary);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}
+
+/* The component map in chat-message.tsx styles these itself; the plugin's
+   own rules would otherwise re-add its margins and backgrounds. */
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+}
+
+.prose :where(code):not(:where([class~="not-prose"] *))::before,
+.prose :where(code):not(:where([class~="not-prose"] *))::after {
+  content: none;
+}
+
+.prose :where(table):not(:where([class~="not-prose"] *)) {
+  margin: 0;
+  font-size: inherit;
 }
 
 /* ── Scrollbar Styling ────────────────────────────────────────────────────── */

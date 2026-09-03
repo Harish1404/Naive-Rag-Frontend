@@ -5,6 +5,7 @@ import { useChatStore } from "@/stores/chat-store";
 import { useVoiceStore } from "@/stores/voice-store";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { MessageSkeleton, TypingIndicator } from "@/components/chat/message-skeleton";
+import { ToolApproval } from "@/components/chat/tool-approval";
 import type { Message } from "@/types/chat";
 
 export function ChatContainer() {
@@ -13,6 +14,7 @@ export function ChatContainer() {
     isStreaming,
     streamingContent,
     isLoadingHistory,
+    pendingApproval,
   } = useChatStore();
 
   const voiceContent = useVoiceStore((s) => s.streamingContent);
@@ -24,7 +26,7 @@ export function ChatContainer() {
   // Auto-scroll to bottom when new messages arrive or streaming content updates
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingContent, voiceContent]);
+  }, [messages, streamingContent, voiceContent, pendingApproval]);
 
   if (isLoadingHistory) {
     return (
@@ -63,6 +65,13 @@ export function ChatContainer() {
 
         {/* Typing indicator when streaming just started but no content yet */}
         {isStreaming && !streamingContent && <TypingIndicator />}
+
+        {/* The graph paused for tool approval. Nothing else advances this
+            thread until the user answers, so this sits at the live end of the
+            conversation — after whatever the model said on its way here.
+            Keyed on the pending call so a second prompt in the same turn gets
+            a clean card rather than the previous one's half-typed reason. */}
+        <ToolApproval key={pendingApproval?.tool_calls?.[0]?.id ?? "none"} />
 
         {/* A voice answer, captioned while it is still being spoken. Tokens
             arrive well ahead of their audio, so this makes the wait legible. */}

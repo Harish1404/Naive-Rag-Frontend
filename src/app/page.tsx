@@ -32,14 +32,21 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function HomePage() {
-  const { messages, isStreaming, stopStreaming, activeConversationId, clearChat } =
-    useChatStore();
+  const { messages, isStreaming, stopStreaming, clearChat } = useChatStore();
 
+  // Landing on "New chat" resets whatever conversation was open.
+  //
+  // Mount-only, and deliberately not keyed on activeConversationId any more.
+  // sendMessage now adopts the new id while the answer is still streaming, and
+  // reacting to that would fire clearChat() — which calls abortController
+  // .abort() and would kill the very turn being streamed, on this very page,
+  // before the navigation to /c/{id} had a chance to happen.
   useEffect(() => {
-    if (activeConversationId) {
-      clearChat();
-    }
-  }, [activeConversationId, clearChat]);
+    const { isStreaming: streaming, pendingApproval } = useChatStore.getState();
+    if (streaming || pendingApproval) return;
+    clearChat();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only; see above
+  }, []);
 
   // Signed out, this stashes the prompt and routes to sign-in, then replays it
   // once the backend session exists. Signed in, it just sends.

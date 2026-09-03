@@ -7,10 +7,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useChatStore } from "@/stores/chat-store";
 import { useSession } from "@/components/auth/session-provider";
 import { savePendingPrompt, takePendingPrompt } from "@/lib/pending-prompt";
-import {
-  useOptimisticInsert,
-  useInvalidateConversations,
-} from "@/hooks/use-conversations";
+import { useOptimisticInsert } from "@/hooks/use-conversations";
 
 /**
  * Sending a message, with the sign-in detour handled.
@@ -30,8 +27,9 @@ export function useGuardedSend() {
   const { status } = useSession();
 
   const { sendMessage } = useChatStore();
+  // optimisticInsert already revalidates in the background, so there is no
+  // separate invalidation to fire here.
   const optimisticInsert = useOptimisticInsert();
-  const invalidateConversations = useInvalidateConversations();
 
   // takePendingPrompt() clears as it reads, but the send is async — without
   // this flag a second render could start a duplicate turn before the first
@@ -46,13 +44,23 @@ export function useGuardedSend() {
         return null;
       }
 
-      const conversationId = await sendMessage(prompt);
-      if (conversationId) {
+      // Navigation happens on the *header*, not on the finished answer.
+      //
+      // This used to `await sendMessage(...)` first, which only resolves once
+      // the whole stream has completed — so the user watched the answer
+      // generate on `/` and was thrown to /c/{id} at the very end. Worse, the
+      // store adopted the id just as late, so arriving at /c/{id} looked like
+      // a cold load and blanked the messages that had just streamed in.
+      //
+      // sendMessage now hands the id over the moment X-Conversation-Id is
+      // read, and has already set it as the active conversation by then.
+      const conversationId = await sendMessage(prompt, (id) => {
         // Optimistically insert the new conversation into the sidebar cache
         // so it appears instantly, then revalidate in background
-        optimisticInsert(conversationId, prompt.slice(0, 60));
-        router.push(`/c/${conversationId}`);
-      }
+        optimisticInsert(id, prompt.slice(0, 60));
+        router.push(`/c/${id}`);
+      });
+
       return conversationId;
     },
     [isLoaded, isSignedIn, sendMessage, optimisticInsert, router]
