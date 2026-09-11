@@ -93,13 +93,13 @@ transcript as part of it.
 
 ### Answer length
 
-The backend runs a four-model chain — `mistral-small` → `gpt-oss-20b` →
-`deepseek-v4-flash` → `gemini-2.5-flash` — with **two** ceilings, both in the backend's
+The backend runs a three-model chain — `mistral-small` → `gpt-oss-20b` →
+`gemini-3.5-flash-lite` — with **two** ceilings, both in the backend's
 `app/core/config.py`:
 
 | Setting | Default | Applies to |
 |---|---|---|
-| `LIGHT_MAX_TOKENS` | **2500** | DeepSeek, Mistral, Gemini — every token is visible |
+| `LIGHT_MAX_TOKENS` | **2500** | Mistral, Gemini — every token is visible |
 | `REASONING_MAX_TOKENS` | **4000** | `gpt-oss-20b` — 2500 visible plus ~1400 of headroom for its hidden reasoning, so both tiers land in the same place |
 
 A budget is a hard ceiling: the model stops dead when it is reached, `finish_reason` comes
@@ -114,10 +114,7 @@ they are given and can still be cut — that is what the `truncated` event and t
 notice are for. Both numbers are env-tunable.
 
 On the reasoning overhead: `gpt-oss-20b` spent **1375 reasoning tokens of 3617** on a
-measured deep dive, which is why that tier carries ~1400 extra. DeepSeek is configured
-with reasoning explicitly **disabled**, so every one of its tokens is visible — measured
-at a 600-token cap, reasoning left on yielded only ~270 visible tokens against 600 with it
-off, so the flag is worth roughly double the answer.
+measured deep dive, which is why that tier carries ~1400 extra.
 
 ---
 
@@ -378,7 +375,6 @@ which is otherwise silent.
 | A whole route returns an empty reply | `ANSWER_NODES` does not match a renamed graph node (§3). |
 | An answer stops mid-word, no error | Hit `LIGHT_MAX_TOKENS` (2500) or `REASONING_MAX_TOKENS` (4000). Confirm with `finish_reason == "length"`; the UI should show the cut-off note. Open-ended prompts can still exhaust any budget. |
 | Answers suddenly slow (~3s to first token) | The chain has fallen through to Gemini. Check the startup chain log and whether Mistral is erroring or rate-limiting. |
-| A turn hangs with no tokens | Likely the DeepSeek fallback stalling mid-generation — it carries a 60s timeout, after which the chain fails over to Gemini. |
 | Answer is cut but no note appears | `onTruncated` not wired through `stream.ts` → store, or `finishTurn` not stamping `partial`. |
 | Card never appears, stream just stops | `onInterrupt` not wired through from the store. |
 | A stub message appears above the card | `onComplete` not suppressed on interrupt (§4). |
